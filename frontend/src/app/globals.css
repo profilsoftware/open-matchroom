@@ -1,0 +1,574 @@
+@import "tailwindcss";
+
+/* ============================================================
+   OpenMatchroom — design tokens + residual styles.
+
+   The component styling now lives inline (Tailwind utilities in the JSX). What
+   stays here is the cross-cutting / hard-to-inline residual:
+   - the CSS-variable design tokens + their theme/font/accent variants;
+   - the @theme bridge that exposes those tokens as Tailwind utilities;
+   - base resets + keyframes;
+   - a handful of decorative classes that need pseudo-elements, backdrop
+     filters, multi-layer gradients or descendant selectors;
+   - the position-badge palette (themed via [data-theme]); and
+   - the [data-density="compact"] overrides (they hook the kept class names).
+   ============================================================ */
+
+/* ---- Theme tokens (default: light) ---- */
+:root {
+  --brand: #3b6fa6; /* steel blue from logo swirl */
+  --brand-strong: #2f5d8e;
+  --brand-soft: #7e97c8; /* periwinkle */
+  --brand-tint: color-mix(in srgb, var(--brand) 12%, #fff);
+  --navy: #16273c;
+
+  --bg: #eef2f8;
+  --surface: #ffffff;
+  --surface-2: #f6f8fc;
+  --raised: #ffffff;
+  --ink: #1d2735;
+  --ink-2: #46546a;
+  --muted: #7b8696;
+  --line: #e3e9f2;
+  --line-strong: #cdd7e6;
+
+  --pos: #1f9d6b; /* goal / positive */
+  --danger: #d64545; /* red card */
+  --warn: #e0a800; /* yellow card */
+  --live: #e23a3a;
+
+  --pitch-a: #3f7d52;
+  --pitch-b: #388049;
+
+  --r-sm: 7px;
+  --r: 11px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --shadow-sm: 0 1px 2px rgba(22, 39, 60, 0.06), 0 1px 3px rgba(22, 39, 60, 0.04);
+  --shadow: 0 4px 16px rgba(22, 39, 60, 0.08), 0 1px 3px rgba(22, 39, 60, 0.05);
+  --shadow-lg: 0 18px 50px rgba(22, 39, 60, 0.16), 0 4px 14px rgba(22, 39, 60, 0.08);
+
+  /* design's switchable semantic font tokens → next/font families */
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
+  --font-score: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+/* ---- Typography variants (white-label) ---- */
+[data-font="archivo"] {
+  --font-display: var(--font-archivo), sans-serif;
+  --font-body: var(--font-ibm-plex-sans), sans-serif;
+  --font-score: var(--font-archivo), sans-serif;
+}
+[data-font="condensed"] {
+  --font-display: var(--font-barlow-condensed), sans-serif;
+  --font-body: var(--font-ibm-plex-sans), sans-serif;
+  --font-score: var(--font-barlow-condensed), sans-serif;
+}
+
+/* ---- Dark theme ---- */
+[data-theme="dark"] {
+  --bg: #0e1722;
+  --surface: #16212f;
+  --surface-2: #111b27;
+  --raised: #1d2b3c;
+  --ink: #e9eff7;
+  --ink-2: #b3c0d2;
+  --muted: #8190a4;
+  --line: #27374b;
+  --line-strong: #33465e;
+  --brand: #5b8ac9;
+  --brand-strong: #79a1d8;
+  --brand-tint: color-mix(in srgb, var(--brand) 20%, var(--surface));
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 55px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Midnight theme (deep navy brand wash) ---- */
+[data-theme="midnight"] {
+  --bg: #0a1a2f;
+  --surface: #0f2540;
+  --surface-2: #0c2038;
+  --raised: #143257;
+  --ink: #eaf2fb;
+  --ink-2: #aec4dd;
+  --muted: #7e96b2;
+  --line: #1d3b5e;
+  --line-strong: #2a4f78;
+  --brand: #6aa0e0;
+  --brand-strong: #8bb6ea;
+  --brand-tint: color-mix(in srgb, var(--brand) 26%, var(--surface));
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+::selection {
+  background: var(--brand-soft);
+  color: #fff;
+}
+
+/* ---- Expose the design tokens as Tailwind v4 utilities (layout glue) ----
+   `inline` keeps the var() reference, so utilities like `bg-surface` /
+   `text-muted` / `border-line` / `font-display` track the active theme.
+   Shadows are read directly off the CSS vars via `shadow-[var(--shadow-*)]`. */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-tint: var(--brand-tint);
+  --color-navy: var(--navy);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-pos: var(--pos);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-live: var(--live);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-score: var(--font-score);
+  --font-mono: var(--font-mono);
+}
+
+/* ============================================================
+   Residual decorative classes
+   (pseudo-elements / backdrop / multi-layer gradients / descendant selectors)
+   ============================================================ */
+
+/* Sticky public topbar — frosted backdrop. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 22px;
+  height: 60px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Scoreboard hero — navy gradient + radiant overlay. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--navy), color-mix(in srgb, var(--navy) 70%, #000));
+  border-radius: var(--r-xl);
+  color: #eaf1fb;
+  box-shadow: var(--shadow-lg);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(123, 151, 200, 0.35), transparent 60%),
+    radial-gradient(80% 120% at 110% 120%, rgba(59, 111, 166, 0.4), transparent 55%);
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 9px rgba(226, 58, 58, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(226, 58, 58, 0);
+  }
+}
+
+@keyframes fade {
+  from {
+    transform: translateY(7px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+/* Live timeline — the vertical connector line is a pseudo-element. */
+.tl-item {
+  display: grid;
+  grid-template-columns: 54px 30px 1fr;
+  gap: 12px;
+  padding: 13px 0;
+  position: relative;
+}
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: 68px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+.tl-item:first-child::before {
+  top: 18px;
+}
+.tl-item:last-child::before {
+  bottom: auto;
+  height: 18px;
+}
+
+/* Lineup pitch — striped grass + markings drawn with CSS. */
+.pitch {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: repeating-linear-gradient(0deg, var(--pitch-a) 0 9%, var(--pitch-b) 9% 18%);
+  aspect-ratio: 68/105;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.pitch .lines {
+  position: absolute;
+  inset: 0;
+}
+.pitch .lines::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.pitch .center-c {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80px;
+  height: 80px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.pitch .pbox {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  height: 13%;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+.pitch .pbox.top {
+  top: 0;
+  border-top: 0;
+}
+.pitch .pbox.bot {
+  bottom: 0;
+  border-bottom: 0;
+}
+.admin-pitch {
+  max-width: 440px;
+}
+
+/* Positioned player dots (used on both the public pitch and the editor). */
+.player-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 60px;
+}
+.player-dot .num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-score);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+.player-dot .pn {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  max-width: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player-dot.editable {
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.12s ease;
+}
+.player-dot.editable:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+  z-index: 3;
+}
+.player-dot.editable:active {
+  cursor: grabbing;
+}
+.player-dot.editable.sel {
+  z-index: 4;
+}
+.player-dot.editable.sel .num {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px #fff, 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+.player-dot.editable.over .num {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px rgba(255, 255, 255, 0.9);
+  transform: scale(1.08);
+}
+.player-dot.empty {
+  pointer-events: auto;
+  opacity: 0.85;
+}
+.player-dot.empty .num {
+  background: transparent;
+  border: 1.5px dashed rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  font-weight: 500;
+}
+.player-dot.empty .pn {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Editor section — adjacent-sibling spacing + its heading. */
+.editor-section + .editor-section {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.editor-section > h4 {
+  margin: 0 0 14px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+/* Position badge palette (GK/DF/MF/FW) — themed via [data-theme]. */
+.pos-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+.pos-GK {
+  background: #f3e8c8;
+  color: #8a6d12;
+}
+.pos-DF {
+  background: #dbe8f5;
+  color: #2f5d8e;
+}
+.pos-MF {
+  background: #dcf0e3;
+  color: #1f7d52;
+}
+.pos-FW {
+  background: #f6dede;
+  color: #aa3232;
+}
+[data-theme="dark"] .pos-GK,
+[data-theme="midnight"] .pos-GK {
+  background: #4a3f1e;
+  color: #e6c85e;
+}
+[data-theme="dark"] .pos-DF,
+[data-theme="midnight"] .pos-DF {
+  background: #1e3a55;
+  color: #86b4e0;
+}
+[data-theme="dark"] .pos-MF,
+[data-theme="midnight"] .pos-MF {
+  background: #1c4031;
+  color: #6dc996;
+}
+[data-theme="dark"] .pos-FW,
+[data-theme="midnight"] .pos-FW {
+  background: #4a2424;
+  color: #e88e8e;
+}
+
+/* Fixtures row — neutral base, with gradient/glow accents for live & scheduled. */
+.fx-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 84px 1fr 120px;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 14px 18px;
+  text-align: left;
+  color: var(--ink);
+  text-decoration: none;
+  transition: 0.15s;
+  width: 100%;
+  box-shadow: var(--shadow-sm);
+}
+.fx-row:hover {
+  border-color: var(--brand-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.fx-row.is-live {
+  border-color: color-mix(in srgb, var(--live) 40%, var(--line));
+}
+/* Planned (scheduled) matches get a soft blue tint + glow; played ones stay neutral. */
+.fx-row.is-scheduled {
+  background:
+    linear-gradient(180deg, var(--brand-tint), transparent 70%),
+    var(--surface);
+  border-color: var(--brand-soft);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand) 12%, transparent),
+    0 6px 18px -8px color-mix(in srgb, var(--brand) 38%, transparent);
+}
+.fx-row.is-scheduled:hover {
+  border-color: var(--brand-strong);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand) 18%, transparent),
+    0 8px 22px -8px color-mix(in srgb, var(--brand) 46%, transparent);
+}
+
+/* Featured fixture hero — light card with a brand (or live-red) gradient wash. */
+.fx-hero {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, var(--brand-tint), transparent 55%),
+    var(--surface);
+  border: 1px solid var(--brand-soft);
+  border-radius: var(--r-xl);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 22px;
+  transition: 0.15s;
+}
+.fx-hero:hover {
+  transform: translateY(-1px);
+  border-color: var(--brand-strong);
+  box-shadow: var(--shadow);
+}
+.fx-hero.is-live {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--live) 9%, transparent), transparent 55%),
+    var(--surface);
+  border-color: color-mix(in srgb, var(--live) 42%, var(--line));
+}
+
+/* Admin sign-in — full-screen radial/linear gradient backdrop. */
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+  background:
+    radial-gradient(130% 90% at 50% -10%, rgba(59, 111, 166, 0.5), transparent 55%),
+    linear-gradient(170deg, var(--navy), #0a1320);
+}
+
+/* ============================================================
+   Density: compact — overrides hook the kept class names. The base spacing
+   lives inline on each element; these unlayered rules win over the utilities.
+   ============================================================ */
+[data-density="compact"] .hero-inner {
+  padding: 18px 24px 20px;
+}
+[data-density="compact"] .score-row {
+  margin-top: 14px;
+}
+[data-density="compact"] .score-nums {
+  font-size: 52px;
+}
+[data-density="compact"] .tabs {
+  margin: 16px 0 14px;
+}
+[data-density="compact"] .tl-item {
+  padding: 9px 0;
+}
+[data-density="compact"] .stat-row {
+  padding: 10px 0;
+}
+[data-density="compact"] .card-head {
+  padding: 12px 18px;
+}
+[data-density="compact"] .editor-body {
+  padding: 15px;
+}
+[data-density="compact"] .editor-section + .editor-section {
+  margin-top: 18px;
+  padding-top: 16px;
+}
+[data-density="compact"] .list-row {
+  padding: 9px 14px;
+}
+[data-density="compact"] .matchroom {
+  padding-bottom: 40px;
+}
+
+/* ============================================================
+   Responsive — only the residual classes whose base lives here. Everything
+   else carries its breakpoints inline (Tailwind `max-[Npx]:` variants).
+   ============================================================ */
+@media (max-width: 760px) {
+  .fx-row {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+}
+@media (max-width: 620px) {
+  .topbar {
+    padding: 0 14px;
+    gap: 10px;
+  }
+}

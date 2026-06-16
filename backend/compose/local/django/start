@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+python manage.py migrate
+
+# createadmin lands in Phase 3 (users app). Guarded so `make up` works before then.
+if python manage.py help createadmin >/dev/null 2>&1; then
+    python manage.py createadmin
+fi
+
+exec python manage.py runserver 0.0.0.0:8000

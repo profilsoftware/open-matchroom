@@ -1,0 +1,57 @@
+volumes:
+  backend_local_postgres_data: {}
+  backend_local_postgres_data_backups: {}
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: compose/local/django/Dockerfile
+    image: openmatchroom_local_backend
+    container_name: openmatchroom_local_backend
+    depends_on:
+      - postgres
+    volumes:
+      - /app/.venv
+      - ./backend:/app:z
+    env_file:
+      - ./backend/.envs/.local/.django
+      - ./backend/.envs/.local/.postgres
+    ports:
+      - '8000:8000'
+    command: /start
+
+  postgres:
+    build:
+      context: ./backend
+      dockerfile: compose/production/postgres/Dockerfile
+    image: openmatchroom_production_postgres
+    container_name: openmatchroom_local_postgres
+    volumes:
+      - backend_local_postgres_data:/var/lib/postgresql/18/docker
+      - backend_local_postgres_data_backups:/backups
+    env_file:
+      - ./backend/.envs/.local/.postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: openmatchroom_local_frontend
+    container_name: openmatchroom_local_frontend
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app:z
+      - /app/node_modules
+      - /app/.next
+    environment:
+      # Browser-facing fallback; with the Next proxy (FD4) the client calls
+      # same-origin /api/* so this is only used if a client bypasses the proxy.
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      # Server-side backend address: the rewrites() proxy destination + SSR reads.
+      - INTERNAL_API_URL=http://backend:8000
+      - WATCHPACK_POLLING=true
+    ports:
+      - '3000:3000'
+    command: pnpm dev --hostname 0.0.0.0

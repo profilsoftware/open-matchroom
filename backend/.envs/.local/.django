@@ -1,0 +1,10 @@
+# General
+# ------------------------------------------------------------------------------
+USE_DOCKER=yes
+IPYTHONDIR=/app/.ipython
+
+# Default admin (created idempotently on `make up`)
+# ------------------------------------------------------------------------------
+DJANGO_ADMIN_EMAIL=admin@club.example
+DJANGO_ADMIN_PASSWORD=matchroom-admin
+DJANGO_ADMIN_NAME=OpenMatchroom Admin

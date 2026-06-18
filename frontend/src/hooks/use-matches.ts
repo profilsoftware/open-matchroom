@@ -10,7 +10,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import * as matchesService from "@/services/matches.service";
 import type { EventInput } from "@/types/event";
-import type { LineupInput, MatchCard, MatchInput, Matchroom, TeamStatsInput } from "@/types/match";
+import type {
+  ClockInput,
+  LineupInput,
+  MatchCard,
+  MatchInput,
+  Matchroom,
+  TeamStatsInput,
+} from "@/types/match";
 
 export const matchKeys = {
   all: ["matches"] as const,
@@ -66,6 +73,22 @@ export function useDeleteMatch() {
       queryClient.setQueryData<MatchCard[]>(matchKeys.list, (old = []) =>
         old.filter((m) => m.pid !== pid),
       );
+      void queryClient.invalidateQueries({ queryKey: matchKeys.list });
+    },
+  });
+}
+
+/**
+ * Drive the match clock (start/pause/finish/set). The action returns the whole
+ * matchroom, so seed the detail cache directly for an instant scoreboard update
+ * and invalidate the list so the status badge reconciles.
+ */
+export function useMatchClock(pid: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ClockInput) => matchesService.matchClock(pid, input),
+    onSuccess: (matchroom) => {
+      queryClient.setQueryData<Matchroom>(matchKeys.detail(pid), matchroom);
       void queryClient.invalidateQueries({ queryKey: matchKeys.list });
     },
   });

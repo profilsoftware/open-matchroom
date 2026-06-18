@@ -25,7 +25,8 @@ class TestMatchModel:
         match = MatchFactory()
 
         assert match.status == Match.Status.SCHEDULED
-        assert match.minute == 0
+        assert match.current_minute == 0
+        assert match.clock_started_at is None
         assert match.home_score == 0
         assert match.away_score == 0
         assert match.home_formation == "4-3-3"

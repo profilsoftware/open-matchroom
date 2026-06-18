@@ -1,5 +1,6 @@
 import { Emblem } from "@/components/ui/Emblem";
 import { Icon } from "@/components/ui/Icon";
+import { useLiveMinute } from "@/hooks/use-live-minute";
 import { cn } from "@/lib/cn";
 import { formatMatchDate, formatMatchTime } from "@/lib/format";
 import type { Matchroom, Scorer } from "@/types/match";
@@ -96,11 +97,12 @@ const STATUS_TAG =
   "inline-flex items-center gap-[7px] whitespace-nowrap rounded-full px-3 py-[5px] text-[12px] font-bold uppercase tracking-[0.06em]";
 
 function StatusTag({ match }: { match: Matchroom }) {
+  const minute = useLiveMinute(match);
   if (match.status === "LIVE") {
     return (
       <span className={cn(STATUS_TAG, "bg-[rgba(226,58,58,0.16)] text-[#ff8d8d]")}>
         <span className="h-2 w-2 animate-[pulse_1.6s_infinite] rounded-full bg-live shadow-[0_0_0_0_rgba(226,58,58,0.6)]" />
-        {match.minute}′
+        {minute}′
       </span>
     );
   }

@@ -100,6 +100,9 @@ class MatchCardSerializer(serializers.ModelSerializer):
 
     home_team = TeamBriefSerializer(read_only=True)
     away_team = TeamBriefSerializer(read_only=True)
+    # Derived from the clock (see Match.current_minute); the anchors below let
+    # the client tick smoothly between polls.
+    minute = serializers.IntegerField(source="current_minute", read_only=True)
 
     class Meta:
         model = Match
@@ -111,6 +114,8 @@ class MatchCardSerializer(serializers.ModelSerializer):
             "kickoff_at",
             "status",
             "minute",
+            "clock_started_at",
+            "clock_elapsed_seconds",
             "home_score",
             "away_score",
             "home_penalty_score",
@@ -126,6 +131,7 @@ class MatchroomSerializer(serializers.ModelSerializer):
     home_team = TeamBriefSerializer(read_only=True)
     away_team = TeamBriefSerializer(read_only=True)
     events = EventSerializer(many=True, read_only=True)
+    minute = serializers.IntegerField(source="current_minute", read_only=True)
     lineup = serializers.SerializerMethodField()
     stats = serializers.SerializerMethodField()
     scorers = serializers.SerializerMethodField()
@@ -140,6 +146,8 @@ class MatchroomSerializer(serializers.ModelSerializer):
             "kickoff_at",
             "status",
             "minute",
+            "clock_started_at",
+            "clock_elapsed_seconds",
             "home_score",
             "away_score",
             "home_penalty_score",
@@ -217,7 +225,6 @@ class MatchWriteSerializer(serializers.ModelSerializer):
             "venue",
             "kickoff_at",
             "status",
-            "minute",
             "home_score",
             "away_score",
             "home_penalty_score",
@@ -226,6 +233,18 @@ class MatchWriteSerializer(serializers.ModelSerializer):
             "away_formation",
         ]
         read_only_fields = ["pid"]
+
+
+class ClockActionSerializer(serializers.Serializer):
+    """Input for the `clock` action: a transition, plus a minute for `set`."""
+
+    action = serializers.ChoiceField(choices=["start", "pause", "finish", "set"])
+    minute = serializers.IntegerField(min_value=0, required=False)
+
+    def validate(self, attrs):
+        if attrs["action"] == "set" and attrs.get("minute") is None:
+            raise serializers.ValidationError({"minute": "Required for action 'set'."})
+        return attrs
 
 
 class LineupWriteSerializer(serializers.Serializer):

@@ -58,7 +58,12 @@ export interface MatchCard {
   /** ISO datetime (UTC); split into date + time for the admin's two inputs. */
   kickoffAt: string | null;
   status: MatchStatus;
+  /** Derived from the clock server-side; the anchors below let the client tick. */
   minute: number;
+  /** ISO datetime of the last clock start/resume; `null` when the clock is paused. */
+  clockStartedAt: string | null;
+  /** Seconds accumulated before the current running segment. */
+  clockElapsedSeconds: number;
   homeScore: number;
   awayScore: number;
   /** Penalty-shootout result, separate from the score; `null` = no shootout. */
@@ -88,7 +93,6 @@ export interface MatchInput {
   venue?: string;
   kickoffAt?: string | null;
   status?: MatchStatus;
-  minute?: number;
   homeScore?: number;
   awayScore?: number;
   homePenaltyScore?: number | null;
@@ -105,6 +109,15 @@ export interface MatchInput {
  */
 export interface MatchWritten extends Required<MatchInput> {
   pid: string;
+}
+
+/** Match-clock transitions driven from the live console (ClockActionSerializer). */
+export type ClockAction = "start" | "pause" | "finish" | "set";
+
+/** Input for the `clock` action; `minute` is required only for `"set"`. */
+export interface ClockInput {
+  action: ClockAction;
+  minute?: number;
 }
 
 /** Input for the `lineup` action (LineupWriteSerializer); ids are player pids. */

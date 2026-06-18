@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { useHasLiveMatch } from "@/hooks/use-matchroom";
 import { cn } from "@/lib/cn";
 import { LogoLockup } from "./LogoLockup";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavItem {
   href: string;
@@ -70,6 +71,7 @@ export function PublicTopbar() {
           </Link>
         ))}
       </nav>
+      <ThemeToggle />
     </header>
   );
 }

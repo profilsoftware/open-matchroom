@@ -41,7 +41,7 @@ class MatchAdmin(admin.ModelAdmin):
         "competition",
         "round",
         "status",
-        "minute",
+        "current_minute",
         "home_score",
         "away_score",
         "kickoff_at",

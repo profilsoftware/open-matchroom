@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from src.matches.api.filters import MatchFilter
+from src.matches.api.serializers import ClockActionSerializer
 from src.matches.api.serializers import EventSerializer
 from src.matches.api.serializers import LineupWriteSerializer
 from src.matches.api.serializers import MatchCardSerializer
@@ -19,6 +20,7 @@ from src.matches.models import Event
 from src.matches.models import Match
 from src.matches.models import PlayerPositionInMatch
 from src.matches.models import TeamStatsInMatch
+from src.matches.services import clock
 from src.matches.services import events
 from src.matches.services import lineup
 from src.matches.services import stats
@@ -83,6 +85,23 @@ class MatchViewSet(viewsets.ModelViewSet):
             starter_ids=data["starters"],
             sub_ids=data["subs"],
         )
+        return self._matchroom_response(match)
+
+    @action(detail=True, methods=["post"])
+    def clock(self, request, pid=None):
+        match = self.get_object()
+        serializer = ClockActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        op = data["action"]
+        if op == "start":
+            clock.start(match)
+        elif op == "pause":
+            clock.pause(match)
+        elif op == "finish":
+            clock.finish(match)
+        elif op == "set":
+            clock.set_minute(match, data["minute"])
         return self._matchroom_response(match)
 
     @action(detail=True, methods=["put"], url_path="team-stats")

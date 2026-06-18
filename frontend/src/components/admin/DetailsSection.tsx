@@ -77,10 +77,10 @@ export function DetailsSection({
       updateMatch.mutate(
         {
           pid: match.pid,
-          // preserve the live scoreboard (edited in the Live console).
+          // preserve the live scoreboard (edited in the Live console). The
+          // match clock is server-derived and untouched by this PUT.
           input: {
             ...input,
-            minute: match.minute,
             homeScore: match.homeScore,
             awayScore: match.awayScore,
             homePenaltyScore: match.homePenaltyScore,

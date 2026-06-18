@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from src.shared.django.models import BaseModel
@@ -39,7 +40,12 @@ class Match(BaseModel):
         choices=Status.choices,
         default=Status.SCHEDULED,
     )
-    minute = models.PositiveSmallIntegerField(_("minute"), default=0)
+    # Match clock as a stopwatch: it is *running* iff ``clock_started_at`` is
+    # set; ``clock_elapsed_seconds`` accumulates time from previous segments
+    # (folded in on every pause). The displayed minute is derived from these —
+    # never stored — so a live match advances on its own (see services/clock.py).
+    clock_started_at = models.DateTimeField(_("clock started at"), null=True, blank=True)
+    clock_elapsed_seconds = models.PositiveIntegerField(_("clock elapsed seconds"), default=0)
     home_score = models.PositiveSmallIntegerField(_("home score"), default=0)
     away_score = models.PositiveSmallIntegerField(_("away score"), default=0)
     home_penalty_score = models.PositiveSmallIntegerField(
@@ -70,6 +76,23 @@ class Match(BaseModel):
 
     def __str__(self):
         return f"{self.home_team} vs {self.away_team}"
+
+    @property
+    def is_clock_running(self) -> bool:
+        return self.clock_started_at is not None
+
+    @property
+    def elapsed_seconds(self) -> int:
+        """Total played seconds, including the segment in progress if running."""
+        elapsed = self.clock_elapsed_seconds
+        if self.clock_started_at is not None:
+            elapsed += (timezone.now() - self.clock_started_at).total_seconds()
+        return int(elapsed)
+
+    @property
+    def current_minute(self) -> int:
+        """The live match minute, derived from the clock (0 when not started)."""
+        return self.elapsed_seconds // 60
 
 
 class Event(BaseModel):

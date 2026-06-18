@@ -15,8 +15,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchored to the repo root so these Python packaging dirs don't swallow nested
+# source like frontend/src/lib (the front-end's lib/ holds real source).
+/lib/
+/lib64/
 parts/
 sdist/
 var/

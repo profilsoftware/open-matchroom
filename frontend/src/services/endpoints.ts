@@ -24,6 +24,7 @@ export const endpoints = {
   matches: {
     list: "api/matches/",
     detail: (pid: string) => `api/matches/${pid}/`,
+    clock: (pid: string) => `api/matches/${pid}/clock/`,
     lineup: (pid: string) => `api/matches/${pid}/lineup/`,
     teamStats: (pid: string) => `api/matches/${pid}/team-stats/`,
     events: (pid: string) => `api/matches/${pid}/events/`,

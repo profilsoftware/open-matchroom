@@ -4,6 +4,7 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { LogoLockup } from "./LogoLockup";
+import { ThemeToggle } from "./ThemeToggle";
 
 export interface AdminTopbarProps {
   /** Display name + avatar initials of the signed-in admin. */
@@ -32,6 +33,7 @@ export function AdminTopbar({
         CONTROL PANEL
       </span>
       <div className="ml-auto flex items-center gap-2.5">
+        <ThemeToggle />
         <Link className={buttonClasses("ghost", true)} href="/">
           <Icon name="eye" size={15} /> View matchroom
         </Link>

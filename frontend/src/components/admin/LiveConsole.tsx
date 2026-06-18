@@ -8,11 +8,13 @@ import { Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { Segmented } from "@/components/ui/Segmented";
 import { Stepper } from "@/components/ui/Stepper";
-import { useCreateEvent, useDeleteEvent, useUpdateMatch } from "@/hooks/use-matches";
+import { useLiveMinute } from "@/hooks/use-live-minute";
+import { useCreateEvent, useDeleteEvent, useMatchClock, useUpdateMatch } from "@/hooks/use-matches";
+import { cn } from "@/lib/cn";
 import { EVENT_TYPES, evMeta } from "@/lib/events";
 import { useToast } from "@/providers/toast-provider";
 import type { EventInput, EventType, MatchEvent, Side } from "@/types/event";
-import type { LineupPlayer, MatchInput, Matchroom, MatchStatus } from "@/types/match";
+import type { ClockInput, LineupPlayer, MatchInput, Matchroom } from "@/types/match";
 
 /** A full write payload from a detail record (a PUT resets omitted fields). */
 function matchToInput(m: Matchroom): MatchInput {
@@ -24,7 +26,6 @@ function matchToInput(m: Matchroom): MatchInput {
     venue: m.venue,
     kickoffAt: m.kickoffAt,
     status: m.status,
-    minute: m.minute,
     homeScore: m.homeScore,
     awayScore: m.awayScore,
     homePenaltyScore: m.homePenaltyScore,
@@ -39,12 +40,6 @@ const SHOOTOUT_OPTIONS: { value: "OFF" | "ON"; label: string }[] = [
   { value: "ON", label: "Penalty shootout" },
 ];
 
-const STATUS_OPTIONS: { value: MatchStatus; label: string }[] = [
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "LIVE", label: "Live" },
-  { value: "FINISHED", label: "Finished" },
-];
-
 type EventSide = Side | "NEUTRAL";
 
 const EVENT_SIDE_OPTIONS: { value: EventSide; label: string }[] = [
@@ -57,23 +52,30 @@ const EVENT_SIDE_OPTIONS: { value: EventSide; label: string }[] = [
 const SECONDARY_TYPES: ReadonlySet<EventType> = new Set(["GOAL", "PENALTY", "SUB"]);
 
 /**
- * Live console. The scoreboard steppers, minute and status write straight
+ * Live console. The scoreboard steppers and penalty shootout write straight
  * through `updateMatch` (held in local state for snappy feedback, re-synced
  * whenever the server detail changes — e.g. a goal event auto-bumping the
- * score). The add-event form posts to the nested events endpoint (a
- * GOAL/PENALTY bumps the score server-side); the feed lists events
- * reverse-chronologically with a delete that reverts the score.
+ * score). The match clock is driven by Start / Pause / Finish (plus a manual
+ * minute adjust) through the dedicated `clock` action; the minute itself is
+ * derived server-side and ticks on screen via `useLiveMinute`. The add-event
+ * form posts to the nested events endpoint (a GOAL/PENALTY bumps the score
+ * server-side); the feed lists events reverse-chronologically with a delete
+ * that reverts the score.
  */
 export function LiveConsole({ match }: { match: Matchroom }) {
   const updateMatch = useUpdateMatch();
+  const clock = useMatchClock(match.pid);
   const createEvent = useCreateEvent(match.pid);
   const deleteEvent = useDeleteEvent(match.pid);
   const toast = useToast();
 
+  const liveMinute = useLiveMinute(match);
+  const running = match.clockStartedAt != null;
   const [homeScore, setHomeScore] = useState(match.homeScore);
   const [awayScore, setAwayScore] = useState(match.awayScore);
-  const [minute, setMinute] = useState(match.minute);
-  const [status, setStatus] = useState<MatchStatus>(match.status);
+  // Draft for the manual minute correction; synced from the server snapshot
+  // (not the ticking value, so it doesn't jump every second).
+  const [adjustMin, setAdjustMin] = useState(match.minute);
   // A shootout is "on" once both penalty scores are recorded (kept apart from
   // the score). The stepper values hold 0 when off so re-enabling starts clean.
   const [shootout, setShootout] = useState(
@@ -82,12 +84,12 @@ export function LiveConsole({ match }: { match: Matchroom }) {
   const [homePens, setHomePens] = useState(match.homePenaltyScore ?? 0);
   const [awayPens, setAwayPens] = useState(match.awayPenaltyScore ?? 0);
 
-  // Re-sync from the server after a refetch (a goal event moves the score).
+  // Re-sync from the server after a refetch (a goal moves the score; a clock
+  // action moves the minute/status).
   useEffect(() => {
     setHomeScore(match.homeScore);
     setAwayScore(match.awayScore);
-    setMinute(match.minute);
-    setStatus(match.status);
+    setAdjustMin(match.minute);
     setShootout(match.homePenaltyScore != null && match.awayPenaltyScore != null);
     setHomePens(match.homePenaltyScore ?? 0);
     setAwayPens(match.awayPenaltyScore ?? 0);
@@ -95,7 +97,6 @@ export function LiveConsole({ match }: { match: Matchroom }) {
     match.homeScore,
     match.awayScore,
     match.minute,
-    match.status,
     match.homePenaltyScore,
     match.awayPenaltyScore,
   ]);
@@ -107,10 +108,14 @@ export function LiveConsole({ match }: { match: Matchroom }) {
     updateMatch.mutate(
       {
         pid: match.pid,
-        input: { ...matchToInput(match), homeScore, awayScore, minute, status, ...pens, ...patch },
+        input: { ...matchToInput(match), homeScore, awayScore, ...pens, ...patch },
       },
       { onError: () => toast("Could not update the scoreboard") },
     );
+  }
+
+  function runClock(input: ClockInput, errorMsg: string) {
+    clock.mutate(input, { onError: () => toast(errorMsg) });
   }
 
   function changeHome(v: number) {
@@ -121,13 +126,9 @@ export function LiveConsole({ match }: { match: Matchroom }) {
     setAwayScore(v);
     commit({ awayScore: v });
   }
-  function changeMinute(v: number) {
-    setMinute(v);
-    commit({ minute: v });
-  }
-  function changeStatus(v: MatchStatus) {
-    setStatus(v);
-    commit({ status: v });
+  function changeAdjust(v: number) {
+    setAdjustMin(v);
+    runClock({ action: "set", minute: v }, "Could not set the minute");
   }
   function changeShootout(on: boolean) {
     setShootout(on);
@@ -157,22 +158,68 @@ export function LiveConsole({ match }: { match: Matchroom }) {
           <Emblem team={match.awayTeam} size={30} radius={8} />
         </div>
 
-        <div className="mt-3.5 grid grid-cols-2 items-end gap-3">
-          <Field label="Minute">
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-bold font-score text-[30px] leading-none tabular-nums">
+              {liveMinute}′
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[11px] uppercase tracking-[0.06em]",
+                match.status === "LIVE" && running && "bg-live-tint text-live",
+                match.status === "FINISHED" &&
+                  "bg-[color-mix(in_srgb,var(--ink)_8%,transparent)] text-ink-2",
+                (match.status === "SCHEDULED" || (match.status === "LIVE" && !running)) &&
+                  "bg-brand-tint text-brand-strong",
+              )}
+            >
+              {match.status === "FINISHED"
+                ? "Full time"
+                : match.status === "LIVE"
+                  ? running
+                    ? "Live"
+                    : "Paused"
+                  : "Scheduled"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {running ? (
+              <Button
+                sm
+                onClick={() => runClock({ action: "pause" }, "Could not pause the clock")}
+                disabled={clock.isPending}
+              >
+                Pause
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                sm
+                onClick={() => runClock({ action: "start" }, "Could not start the clock")}
+                disabled={clock.isPending || match.status === "FINISHED"}
+              >
+                {match.status === "LIVE" ? "Resume" : "Start"}
+              </Button>
+            )}
+            <Button
+              variant="danger"
+              sm
+              onClick={() => runClock({ action: "finish" }, "Could not finish the match")}
+              disabled={clock.isPending || match.status === "FINISHED"}
+            >
+              Finish
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-3.5">
+          <Field label="Adjust minute">
             <Stepper
-              value={minute}
-              onChange={changeMinute}
+              value={adjustMin}
+              onChange={changeAdjust}
               min={0}
               max={130}
-              aria-label="Match minute"
-            />
-          </Field>
-          <Field label="Status">
-            <Segmented
-              options={STATUS_OPTIONS}
-              value={status}
-              onChange={changeStatus}
-              aria-label="Match status"
+              aria-label="Adjust match minute"
             />
           </Field>
         </div>

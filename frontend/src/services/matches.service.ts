@@ -7,6 +7,7 @@
 
 import type { EventInput, MatchEvent } from "@/types/event";
 import type {
+  ClockInput,
   LineupInput,
   MatchCard,
   MatchInput,
@@ -73,6 +74,11 @@ export function updateMatch(pid: string, input: MatchInput): Promise<MatchWritte
 
 export function deleteMatch(pid: string): Promise<Response> {
   return destroy(endpoints.matches.detail(pid));
+}
+
+/** Drive the match clock (start/pause/finish/set); returns the full matchroom. */
+export function matchClock(pid: string, input: ClockInput): Promise<Matchroom> {
+  return post<Matchroom>(endpoints.matches.clock(pid), { json: input });
 }
 
 /** Set one side's formation + ordered starters/subs; returns the full matchroom. */

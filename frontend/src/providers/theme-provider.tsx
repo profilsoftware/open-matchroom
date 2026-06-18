@@ -1,11 +1,19 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
-import { resolveAccentVars, type ThemeConfig } from "@/lib/theme";
+import {
+  readStoredTheme,
+  resolveAccentVars,
+  storeTheme,
+  type ThemeConfig,
+  type ThemeMode,
+} from "@/lib/theme";
 
 interface ThemeContextValue {
   config: ThemeConfig;
   setConfig: (next: ThemeConfig) => void;
+  /** Switch the light/dark/midnight mode and persist the visitor's choice. */
+  setTheme: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -13,11 +21,12 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const ACCENT_VARS = ["--brand", "--brand-strong", "--brand-soft"] as const;
 
 /**
- * White-label theme applier (config-driven, no runtime tweaks UI). The root
- * layout already renders the initial `data-theme`/`data-font`/`data-density` +
- * accent vars on <html> server-side (no FOUC); this re-asserts them on the
- * client and exposes `setConfig` so a future runtime switch (or per-tenant
- * override) re-themes without a reload.
+ * White-label theme applier. The root layout renders the deploy default
+ * `data-theme`/`data-font`/`data-density` + accent vars on <html> server-side,
+ * and a blocking inline script overrides `data-theme` with the visitor's saved
+ * choice before first paint (no FOUC). This provider seeds its state from that
+ * same saved choice, re-asserts the attributes on the client, and exposes
+ * `setTheme` so the light/dark switch re-themes without a reload.
  */
 export function ThemeProvider({
   config: initial,
@@ -26,7 +35,13 @@ export function ThemeProvider({
   config: ThemeConfig;
   children: ReactNode;
 }) {
-  const [config, setConfig] = useState<ThemeConfig>(initial);
+  // Lazy init from the persisted choice so the toggle reflects the theme the
+  // inline script already applied. Renders no theme-dependent markup, so the
+  // server/client divergence here is safe (no hydration mismatch).
+  const [config, setConfig] = useState<ThemeConfig>(() => {
+    const stored = readStoredTheme();
+    return stored ? { ...initial, theme: stored } : initial;
+  });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -40,7 +55,16 @@ export function ThemeProvider({
     }
   }, [config]);
 
-  return <ThemeContext.Provider value={{ config, setConfig }}>{children}</ThemeContext.Provider>;
+  function setTheme(mode: ThemeMode) {
+    storeTheme(mode);
+    setConfig((current) => ({ ...current, theme: mode }));
+  }
+
+  return (
+    <ThemeContext.Provider value={{ config, setConfig, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme(): ThemeContextValue {

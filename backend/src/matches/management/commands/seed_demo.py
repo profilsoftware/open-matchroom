@@ -460,6 +460,10 @@ class Command(BaseCommand):
     def _seed_matches(self, teams: dict) -> None:
         for data in DEMO_MATCHES:
             home, away = teams[data["home"]], teams[data["away"]]
+            status = STATUS_MAP[data["status"]]
+            # The minute is derived from the clock: seed `elapsed` to the wanted
+            # minute, and leave the live fixture's clock *running* so it ticks on
+            # its own (finished/scheduled fixtures stay frozen).
             match, created = Match.objects.update_or_create(
                 home_team=home["team"],
                 away_team=away["team"],
@@ -468,8 +472,11 @@ class Command(BaseCommand):
                     "competition": data["competition"],
                     "venue": data["venue"],
                     "kickoff_at": _kickoff(data["date"], data["time"]),
-                    "status": STATUS_MAP[data["status"]],
-                    "minute": data["minute"],
+                    "status": status,
+                    "clock_elapsed_seconds": data["minute"] * 60,
+                    "clock_started_at": (
+                        timezone.now() if status == Match.Status.LIVE else None
+                    ),
                     # Start 0-0; goal events replay the score back up.
                     "home_score": 0,
                     "away_score": 0,

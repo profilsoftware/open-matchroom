@@ -9,7 +9,7 @@ import {
 } from "next/font/google";
 import type { CSSProperties } from "react";
 import "./globals.css";
-import { getThemeConfig, resolveAccentVars } from "@/lib/theme";
+import { getThemeConfig, resolveAccentVars, themeBootstrapScript } from "@/lib/theme";
 import { Providers } from "@/providers";
 
 // Six font families map onto switchable semantic tokens (--font-display /
@@ -99,7 +99,17 @@ export default function RootLayout({
       data-font={themeConfig.font}
       data-density={themeConfig.density}
       style={accentVars ? (accentVars as CSSProperties) : undefined}
+      // The inline script below overrides data-theme with the visitor's saved
+      // choice before hydration, so the attribute may differ from the SSR value.
+      suppressHydrationWarning
     >
+      <head>
+        {/* Apply a persisted light/dark choice before first paint (no flash).
+            The script is a static string built only from our own constants (no
+            user input), so it is not an XSS vector. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted static theme bootstrap, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript() }} />
+      </head>
       <body>
         <Providers themeConfig={themeConfig}>{children}</Providers>
       </body>

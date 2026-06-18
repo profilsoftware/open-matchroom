@@ -36,6 +36,7 @@
   --danger: #d64545; /* red card */
   --warn: #e0a800; /* yellow card */
   --live: #e23a3a;
+  --live-tint: color-mix(in srgb, var(--live) 12%, transparent); /* live pill bg */
 
   --pitch-a: #3f7d52;
   --pitch-b: #388049;
@@ -81,6 +82,7 @@
   --brand: #5b8ac9;
   --brand-strong: #79a1d8;
   --brand-tint: color-mix(in srgb, var(--brand) 20%, var(--surface));
+  --live-tint: color-mix(in srgb, var(--live) 22%, transparent);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 20px 55px rgba(0, 0, 0, 0.55);
@@ -100,6 +102,7 @@
   --brand: #6aa0e0;
   --brand-strong: #8bb6ea;
   --brand-tint: color-mix(in srgb, var(--brand) 26%, var(--surface));
+  --live-tint: color-mix(in srgb, var(--live) 22%, transparent);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
@@ -151,6 +154,7 @@ button {
   --color-danger: var(--danger);
   --color-warn: var(--warn);
   --color-live: var(--live);
+  --color-live-tint: var(--live-tint);
 
   --radius-sm: var(--r-sm);
   --radius-md: var(--r);

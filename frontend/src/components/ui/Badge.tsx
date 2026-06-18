@@ -19,7 +19,7 @@ const BASE =
   "inline-flex items-center gap-[5px] rounded-full px-[9px] py-[3px] text-[11px] font-bold tracking-[0.03em]";
 
 const VARIANTS: Record<BadgeVariant, string> = {
-  live: "bg-[rgba(226,58,58,0.12)] text-live",
+  live: "bg-live-tint text-live",
   finished: "bg-surface-2 text-muted",
   scheduled: "bg-brand-tint text-brand-strong",
 };

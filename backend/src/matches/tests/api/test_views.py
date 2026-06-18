@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from src.matches.models import Event
@@ -185,6 +188,86 @@ class TestMatchWrites:
 
         assert response.json()["homePenaltyScore"] is None
         assert response.json()["awayPenaltyScore"] is None
+
+
+class TestMatchClock:
+    def _url(self, match: Match) -> str:
+        return reverse("api:match-clock", args=[match.pid])
+
+    def test_anonymous_cannot_control_clock(self, api_client: APIClient):
+        match = MatchFactory()
+
+        response = api_client.post(self._url(match), {"action": "start"}, format="json")
+
+        assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+    def test_start_goes_live_and_minute_advances(self, admin_client: APIClient):
+        match = MatchFactory(status=Match.Status.SCHEDULED, kickoff_at=None)
+        t0 = timezone.now()
+
+        with patch("src.matches.services.clock.timezone.now", return_value=t0):
+            start = admin_client.post(self._url(match), {"action": "start"}, format="json")
+
+        assert start.status_code == HTTPStatus.OK
+        assert start.json()["status"] == Match.Status.LIVE
+
+        # Seven minutes later, the derived minute has advanced on its own.
+        with patch(
+            "src.matches.models.timezone.now",
+            return_value=t0 + timedelta(minutes=7, seconds=5),
+        ):
+            detail = admin_client.get(reverse("api:match-detail", args=[match.pid]))
+
+        assert detail.json()["minute"] == 7
+
+    def test_pause_freezes_the_clock(self, admin_client: APIClient):
+        t0 = timezone.now()
+        match = MatchFactory(
+            status=Match.Status.LIVE,
+            clock_started_at=t0,
+            clock_elapsed_seconds=0,
+        )
+
+        with patch(
+            "src.matches.services.clock.timezone.now",
+            return_value=t0 + timedelta(minutes=30),
+        ):
+            response = admin_client.post(self._url(match), {"action": "pause"}, format="json")
+
+        assert response.status_code == HTTPStatus.OK
+        match.refresh_from_db()
+        assert match.clock_started_at is None
+        assert match.clock_elapsed_seconds == 30 * 60
+
+    def test_finish_marks_finished(self, admin_client: APIClient):
+        match = MatchFactory(status=Match.Status.LIVE, clock_started_at=timezone.now())
+
+        response = admin_client.post(self._url(match), {"action": "finish"}, format="json")
+
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()["status"] == Match.Status.FINISHED
+        match.refresh_from_db()
+        assert match.clock_started_at is None
+
+    def test_set_applies_minute(self, admin_client: APIClient):
+        match = MatchFactory(status=Match.Status.LIVE)
+
+        response = admin_client.post(
+            self._url(match),
+            {"action": "set", "minute": 80},
+            format="json",
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        match.refresh_from_db()
+        assert match.clock_elapsed_seconds == 80 * 60
+
+    def test_set_without_minute_is_rejected(self, admin_client: APIClient):
+        match = MatchFactory()
+
+        response = admin_client.post(self._url(match), {"action": "set"}, format="json")
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestNestedEvents:

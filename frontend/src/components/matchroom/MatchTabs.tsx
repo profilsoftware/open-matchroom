@@ -35,15 +35,15 @@ export function MatchTabs({
           role="tab"
           aria-selected={active === t.id}
           className={cn(
-            "flex flex-1 items-center justify-center gap-2 rounded-[10px] border-0 bg-transparent p-[11px] font-semibold text-[14px] transition-colors",
+            "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-[10px] border-0 bg-transparent p-[11px] font-semibold text-[14px] transition-colors max-[620px]:gap-1.5 max-[620px]:p-2",
             active === t.id
               ? "bg-brand text-white"
               : "text-ink-2 hover:bg-surface-2 hover:text-ink",
           )}
           onClick={() => onChange(t.id)}
         >
-          <Icon name={t.icon} size={16} />
-          <span className="max-[620px]:text-[13px]">{t.label}</span>
+          <Icon name={t.icon} size={16} className="shrink-0" />
+          <span className="truncate max-[620px]:text-[13px]">{t.label}</span>
         </button>
       ))}
     </div>

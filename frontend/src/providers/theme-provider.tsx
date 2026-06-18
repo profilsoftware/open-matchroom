@@ -35,13 +35,14 @@ export function ThemeProvider({
   config: ThemeConfig;
   children: ReactNode;
 }) {
-  // Lazy init from the persisted choice so the toggle reflects the theme the
-  // inline script already applied. Renders no theme-dependent markup, so the
-  // server/client divergence here is safe (no hydration mismatch).
-  const [config, setConfig] = useState<ThemeConfig>(() => {
+  const [config, setConfig] = useState<ThemeConfig>(initial);
+
+  useEffect(() => {
     const stored = readStoredTheme();
-    return stored ? { ...initial, theme: stored } : initial;
-  });
+    if (stored && stored !== initial.theme) {
+      setConfig((current) => ({ ...current, theme: stored }));
+    }
+  }, [initial.theme]);
 
   useEffect(() => {
     const root = document.documentElement;

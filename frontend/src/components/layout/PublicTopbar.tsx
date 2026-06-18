@@ -54,7 +54,7 @@ export function PublicTopbar() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-[7px] rounded-full border-0 bg-transparent px-4 py-[7px] font-semibold text-[13px] no-underline transition-colors",
+              "flex items-center gap-[7px] rounded-full border-0 bg-transparent px-4 py-[7px] font-semibold text-[13px] no-underline transition-colors max-[620px]:px-2.5",
               item.match(pathname)
                 ? "bg-brand text-white shadow-[var(--shadow-sm)]"
                 : "text-ink-2 hover:text-ink",

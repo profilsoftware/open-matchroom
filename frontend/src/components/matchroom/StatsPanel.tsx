@@ -50,21 +50,27 @@ export function StatsPanel({ match }: { match: Matchroom }) {
         <h3 className="m-0 font-display font-semibold text-[15px]">Statistics</h3>
       </div>
 
-      <div className="flex items-center justify-center gap-[30px] p-6">
-        <div className="font-bold font-score text-[34px]" style={{ color: "var(--brand)" }}>
+      <div className="flex items-center justify-center gap-[30px] p-6 max-[620px]:gap-3 max-[620px]:p-4">
+        <div
+          className="font-bold font-score text-[34px] max-[620px]:text-[26px]"
+          style={{ color: "var(--brand)" }}
+        >
           {homePoss}%
         </div>
         <div
-          className="relative grid h-[120px] w-[120px] place-items-center rounded-full"
+          className="relative grid h-[120px] w-[120px] shrink-0 place-items-center rounded-full max-[620px]:h-[96px] max-[620px]:w-[96px]"
           style={{
             background: `conic-gradient(var(--brand) 0 ${homePoss}%, var(--brand-soft) ${homePoss}% 100%)`,
           }}
         >
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-surface text-center text-[11px] text-muted leading-[1.3]">
+          <div className="grid h-20 w-20 place-items-center rounded-full bg-surface text-center text-[11px] text-muted leading-[1.3] max-[620px]:h-[68px] max-[620px]:w-[68px]">
             Possession
           </div>
         </div>
-        <div className="font-bold font-score text-[34px]" style={{ color: "var(--brand-soft)" }}>
+        <div
+          className="font-bold font-score text-[34px] max-[620px]:text-[26px]"
+          style={{ color: "var(--brand-soft)" }}
+        >
           {awayPoss}%
         </div>
       </div>

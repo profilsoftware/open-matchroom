@@ -4,6 +4,8 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
+from src.matches.broadcast import BroadcastEventType
+from src.matches.broadcast import broadcast
 from src.matches.models import Event
 from src.matches.models import Match
 from src.matches.models import PlayerPositionInMatch
@@ -82,4 +84,5 @@ def set_lineup(
         for order, pid in enumerate(pids)
     ]
     PlayerPositionInMatch.objects.bulk_create(rows)
+    broadcast(match, BroadcastEventType.LINEUP_UPDATED)
     return rows

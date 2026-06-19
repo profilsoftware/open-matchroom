@@ -98,6 +98,10 @@ Conventions worth keeping:
 - **camelCase on the wire** (`homeTeam`), snake_case in Python (`home_team`) — handled automatically.
 - **Translatable text** is wrapped in `_()`.
 - **Lean stack:** Postgres + Django, in-memory cache locally. **No Celery / background workers.**
+- **Real-time broadcasting.** Match changes are pushed to subscribers through a single, pluggable
+  `broadcast()` function — no-op by default, so nothing real-time runs without config. Swap in your
+  own transport (AppSync, Pusher, WebSocket…) behind one interface. See
+  [`backend/src/matches/broadcast/README.md`](./backend/src/matches/broadcast/README.md).
 
 Settings live in `backend/config/settings/{base,local,production,test}.py`. The default is
 `config.settings.local` for development and `config.settings.test` for pytest. Run backend tooling

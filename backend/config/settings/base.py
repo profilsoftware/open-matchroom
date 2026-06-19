@@ -324,3 +324,15 @@ ADMIN_NAME = env("DJANGO_ADMIN_NAME", default="OpenMatchroom Admin")
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# BROADCASTING (real-time match updates)
+# ------------------------------------------------------------------------------
+# Pluggable, transport-agnostic real-time layer. The default is a no-op so the
+# project runs with zero config; point BROADCAST_BACKEND at a custom client to go
+# live (AppSync, Pusher, WebSocket…). See src/matches/broadcast/README.md.
+BROADCAST_BACKEND = env(
+    "BROADCAST_BACKEND",
+    default="src.matches.broadcast.clients.noop.NoOpBroadcaster",
+)
+# Per-backend config, forwarded to the client's __init__ as **options.
+BROADCAST_OPTIONS = env.json("BROADCAST_OPTIONS", default={})

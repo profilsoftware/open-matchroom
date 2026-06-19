@@ -8,6 +8,8 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
+from src.matches.broadcast import BroadcastEventType
+from src.matches.broadcast import broadcast
 from src.matches.models import Match
 from src.matches.models import TeamStatsInMatch
 
@@ -30,4 +32,5 @@ def upsert_team_stats(match: Match, team: Team, **metrics) -> TeamStatsInMatch:
         team=team,
         defaults=metrics,
     )
+    broadcast(match, BroadcastEventType.STATS_UPDATED)
     return stats

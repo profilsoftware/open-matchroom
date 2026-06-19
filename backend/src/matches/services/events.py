@@ -2,6 +2,8 @@
 
 from django.db import transaction
 
+from src.matches.broadcast import BroadcastEventType
+from src.matches.broadcast import broadcast
 from src.matches.models import GOAL_EVENT_TYPES
 from src.matches.models import MAJOR_EVENT_TYPES
 from src.matches.models import Event
@@ -30,6 +32,7 @@ def create_event(match: Match, **data) -> Event:
     if _is_scoring(event_type, data.get("side")):
         _adjust_score(match, data["side"], 1)
 
+    broadcast(match, BroadcastEventType.EVENT_ADDED)
     return event
 
 
@@ -44,3 +47,5 @@ def delete_event(event: Event) -> None:
 
     if reverts_score:
         _adjust_score(match, side, -1)
+
+    broadcast(match, BroadcastEventType.EVENT_REMOVED)

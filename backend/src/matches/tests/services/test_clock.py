@@ -20,7 +20,9 @@ def _at(model_now=None, clock_now=None):
     if model_now is not None:
         patches.append(patch("src.matches.models.timezone.now", return_value=model_now))
     if clock_now is not None:
-        patches.append(patch("src.matches.services.clock.timezone.now", return_value=clock_now))
+        patches.append(
+            patch("src.matches.services.clock.timezone.now", return_value=clock_now)
+        )
     return patches
 
 

@@ -111,6 +111,7 @@ lint.select = [
   "YTT",
 ]
 lint.ignore = [
+  "COM812", # trailing-comma rule conflicts with the formatter; let the formatter own commas
   "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
   "S101",   # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
   "SIM102", # sometimes it's better to nest
@@ -119,9 +120,11 @@ lint.ignore = [
   # https://github.com/astral-sh/ruff/issues/7871
 ]
 lint.isort.force-single-line = true
+# Tests assert against literal expected values; the magic-value check is only noise there.
+lint.per-file-ignores = { "**/tests/**" = [ "PLR2004" ] }
 
 # ==== pytest ====
-[tool.pytest]
+[tool.pytest.ini_options]
 addopts = [
   "--ds=config.settings.test",
   "--reuse-db",
@@ -135,6 +138,10 @@ python_files = [
 
 # ==== Coverage ====
 [tool.coverage.run]
-include = [ "backend/**" ]
-omit = [ "*/migrations/*", "*/tests/*" ]
+source = [ "src" ]
+omit = [ "*/migrations/*", "*/tests/*", "*/templates/*" ]
 plugins = [ "django_coverage_plugin" ]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

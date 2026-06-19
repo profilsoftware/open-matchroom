@@ -35,7 +35,9 @@ def _only_event(recorder):
 
 class TestClockWiring:
     def test_start_broadcasts_match_started(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         with django_capture_on_commit_callbacks(execute=True):
@@ -43,7 +45,9 @@ class TestClockWiring:
         assert _published_types(recording_broadcaster) == ["MATCH_STARTED"]
 
     def test_pause_broadcasts_match_paused(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory(status=Match.Status.LIVE)
         with django_capture_on_commit_callbacks(execute=True):
@@ -51,7 +55,9 @@ class TestClockWiring:
         assert _published_types(recording_broadcaster) == ["MATCH_PAUSED"]
 
     def test_finish_broadcasts_match_finished(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory(status=Match.Status.LIVE)
         with django_capture_on_commit_callbacks(execute=True):
@@ -59,7 +65,9 @@ class TestClockWiring:
         assert _published_types(recording_broadcaster) == ["MATCH_FINISHED"]
 
     def test_set_minute_broadcasts_generic_update(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         with django_capture_on_commit_callbacks(execute=True):
@@ -69,19 +77,26 @@ class TestClockWiring:
 
 class TestEventWiring:
     def test_create_goal_broadcasts_event_added_with_bumped_score(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         with django_capture_on_commit_callbacks(execute=True):
             events_service.create_event(
-                match, type=Event.Type.GOAL, side=Event.Side.HOME, minute=10,
+                match,
+                type=Event.Type.GOAL,
+                side=Event.Side.HOME,
+                minute=10,
             )
         event = _only_event(recording_broadcaster)
         assert event.type == "MATCH_EVENT_ADDED"
         assert event.data["homeScore"] == 1
 
     def test_delete_event_broadcasts_event_removed(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         event = EventFactory(match=match, type=Event.Type.YELLOW, side=Event.Side.HOME)
@@ -92,7 +107,9 @@ class TestEventWiring:
 
 class TestLineupWiring:
     def test_set_lineup_broadcasts_lineup_updated(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         player = PlayerFactory(team=match.home_team)
@@ -109,7 +126,9 @@ class TestLineupWiring:
 
 class TestStatsWiring:
     def test_upsert_team_stats_broadcasts_stats_updated(
-        self, recording_broadcaster, django_capture_on_commit_callbacks,
+        self,
+        recording_broadcaster,
+        django_capture_on_commit_callbacks,
     ):
         match = MatchFactory()
         with django_capture_on_commit_callbacks(execute=True):

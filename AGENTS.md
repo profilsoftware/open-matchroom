@@ -50,8 +50,8 @@ make seed    # load demo data (4 clubs + fixtures) — run once the stack is up
 - API docs (Swagger): http://localhost:8000/api/docs/
 - Admin sign-in: the demo admin is `admin@club.example` (password from env; a demo default is used locally).
 
-Other targets: `make down`, `make logs`, `make test`, `make migrate`, `make makemigrations`,
-`make shell`. Run `make help` for the full list.
+Other targets: `make down`, `make logs`, `make test`, `make coverage`, `make migrate`,
+`make makemigrations`, `make shell`. Run `make help` for the full list.
 
 ## Repo layout
 
@@ -59,7 +59,7 @@ Other targets: `make down`, `make logs`, `make test`, `make migrate`, `make make
 open-matchroom/
 ├── docker-compose.yml            # local dev: postgres + backend + frontend
 ├── docker-compose.production.yml
-├── Makefile / justfile           # dev entrypoints
+├── Makefile                      # dev entrypoints
 ├── backend/                      # Django 6 + DRF (uv, Python 3.14)
 │   ├── compose/ .envs/ .dockerignore   # Docker build assets (build context = ./backend)
 │   ├── config/{settings,urls,api_router}
@@ -89,7 +89,7 @@ Within an app:
 | `api/views.py` | Thin ViewSets — they wire URLs to serializers and services; no business logic. |
 | `api/filters.py` | Query-string filtering (e.g. `?status=LIVE`). |
 | `services/` | All business logic, written as plain functions. Keep logic out of the views. |
-| `tests/` | `pytest` + `factory_boy`; cover models and API views. |
+| `tests/` | `pytest` + `factory_boy`. Per app: `test_models.py` (the data shape) and `test_api.py` (ViewSets, URL routing, OpenAPI access). Service logic is tested under `tests/services/test_<name>.py`. Factories live in `tests/factories.py`. Run `make coverage` for a report. |
 
 Conventions worth keeping:
 

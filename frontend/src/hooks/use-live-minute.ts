@@ -15,7 +15,7 @@ import type { MatchCard } from "@/types/match";
 
 type ClockFields = Pick<MatchCard, "minute" | "clockStartedAt" | "clockElapsedSeconds">;
 
-function computeMinute(
+export function computeMinute(
   minute: number,
   clockStartedAt: string | null,
   clockElapsedSeconds: number,

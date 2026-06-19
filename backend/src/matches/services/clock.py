@@ -33,7 +33,9 @@ def pause(match: Match) -> Match:
     if match.is_clock_running:
         match.clock_elapsed_seconds = match.elapsed_seconds
         match.clock_started_at = None
-        match.save(update_fields=["clock_elapsed_seconds", "clock_started_at", "modified"])
+        match.save(
+            update_fields=["clock_elapsed_seconds", "clock_started_at", "modified"]
+        )
     broadcast(match, BroadcastEventType.MATCH_PAUSED)
     return match
 
@@ -43,7 +45,14 @@ def finish(match: Match) -> Match:
     match.clock_elapsed_seconds = match.elapsed_seconds
     match.clock_started_at = None
     match.status = Match.Status.FINISHED
-    match.save(update_fields=["clock_elapsed_seconds", "clock_started_at", "status", "modified"])
+    match.save(
+        update_fields=[
+            "clock_elapsed_seconds",
+            "clock_started_at",
+            "status",
+            "modified",
+        ]
+    )
     broadcast(match, BroadcastEventType.MATCH_FINISHED)
     return match
 

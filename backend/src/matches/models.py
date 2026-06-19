@@ -44,8 +44,12 @@ class Match(BaseModel):
     # set; ``clock_elapsed_seconds`` accumulates time from previous segments
     # (folded in on every pause). The displayed minute is derived from these —
     # never stored — so a live match advances on its own (see services/clock.py).
-    clock_started_at = models.DateTimeField(_("clock started at"), null=True, blank=True)
-    clock_elapsed_seconds = models.PositiveIntegerField(_("clock elapsed seconds"), default=0)
+    clock_started_at = models.DateTimeField(
+        _("clock started at"), null=True, blank=True
+    )
+    clock_elapsed_seconds = models.PositiveIntegerField(
+        _("clock elapsed seconds"), default=0
+    )
     home_score = models.PositiveSmallIntegerField(_("home score"), default=0)
     away_score = models.PositiveSmallIntegerField(_("away score"), default=0)
     home_penalty_score = models.PositiveSmallIntegerField(

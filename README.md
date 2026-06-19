@@ -9,7 +9,9 @@ Drop in your colours and crest, self-host it, own the data.
 
 [**▶️ Live demo**](https://open-matchroom.profil-software.com/demo) &nbsp;·&nbsp; [**🌐 Landing page**](https://open-matchroom.profil-software.com/) &nbsp;·&nbsp; [**📖 Contributor guide**](./AGENTS.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![CI](https://github.com/profilsoftware/open-matchroom/actions/workflows/ci.yml/badge.svg)](https://github.com/profilsoftware/open-matchroom/actions/workflows/ci.yml)
+&nbsp;[![codecov](https://codecov.io/gh/profilsoftware/open-matchroom/branch/main/graph/badge.svg)](https://codecov.io/gh/profilsoftware/open-matchroom)
+&nbsp;[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 &nbsp;![Django 6](https://img.shields.io/badge/Django-6-092E20?logo=django&logoColor=white)
 &nbsp;![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white)
 &nbsp;![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)

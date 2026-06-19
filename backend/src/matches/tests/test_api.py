@@ -206,7 +206,9 @@ class TestMatchClock:
         t0 = timezone.now()
 
         with patch("src.matches.services.clock.timezone.now", return_value=t0):
-            start = admin_client.post(self._url(match), {"action": "start"}, format="json")
+            start = admin_client.post(
+                self._url(match), {"action": "start"}, format="json"
+            )
 
         assert start.status_code == HTTPStatus.OK
         assert start.json()["status"] == Match.Status.LIVE
@@ -232,7 +234,9 @@ class TestMatchClock:
             "src.matches.services.clock.timezone.now",
             return_value=t0 + timedelta(minutes=30),
         ):
-            response = admin_client.post(self._url(match), {"action": "pause"}, format="json")
+            response = admin_client.post(
+                self._url(match), {"action": "pause"}, format="json"
+            )
 
         assert response.status_code == HTTPStatus.OK
         match.refresh_from_db()
@@ -242,7 +246,9 @@ class TestMatchClock:
     def test_finish_marks_finished(self, admin_client: APIClient):
         match = MatchFactory(status=Match.Status.LIVE, clock_started_at=timezone.now())
 
-        response = admin_client.post(self._url(match), {"action": "finish"}, format="json")
+        response = admin_client.post(
+            self._url(match), {"action": "finish"}, format="json"
+        )
 
         assert response.status_code == HTTPStatus.OK
         assert response.json()["status"] == Match.Status.FINISHED

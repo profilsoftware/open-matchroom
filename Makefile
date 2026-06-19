@@ -4,7 +4,7 @@
 .DEFAULT_GOAL := help
 COMPOSE := docker compose
 
-.PHONY: help up down logs seed test migrate makemigrations shell build
+.PHONY: help up down prune logs seed test coverage manage migrate makemigrations shell build
 
 help: ## Show this help.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -16,6 +16,9 @@ up: ## Build + start postgres, backend, frontend (backend runs migrate -> create
 down: ## Stop and remove containers.
 	$(COMPOSE) down
 
+prune: ## Stop containers AND delete their volumes (full DB reset).
+	$(COMPOSE) down -v
+
 logs: ## Follow container logs.
 	$(COMPOSE) logs -f
 
@@ -24,6 +27,12 @@ seed: ## Load the demo data (4 clubs + fixtures). Run after `make up`.
 
 test: ## Run the backend test suite (pytest).
 	$(COMPOSE) run --rm backend pytest
+
+coverage: ## Run the backend tests with coverage (terminal report + coverage.xml).
+	$(COMPOSE) run --rm backend sh -c "coverage run -m pytest && coverage report && coverage xml"
+
+manage: ## Run any manage.py command, e.g. `make manage ARGS="showmigrations"`.
+	$(COMPOSE) run --rm backend python manage.py $(ARGS)
 
 migrate: ## Apply database migrations.
 	$(COMPOSE) run --rm backend python manage.py migrate

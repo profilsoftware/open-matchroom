@@ -64,7 +64,7 @@ OpenMatchroom ships as **two apps that talk over a REST API** — a public **mat
   design: no Celery/Redis broker in dev, local cache is in-memory. Python 3.14, managed with `uv`.
 - **Frontend** — Next.js 16 + React 19 + Tailwind v4. Node 22, managed with `pnpm`.
 - **Dev orchestration** — Docker Compose (`postgres` + `backend` + `frontend`), driven by a
-  `Makefile` (a `justfile` mirror is also provided).
+  `Makefile`.
 
 You do **not** need Python, Node, `uv` or `pnpm` installed on your machine — everything runs in
 containers. You only need Docker and `make`.
@@ -76,7 +76,6 @@ containers. You only need Docker and `make`.
 - **Docker** + **Docker Compose** (Docker Desktop on macOS/Windows includes both).
 - **`make`** (pre-installed on macOS/Linux; on Windows use WSL or run the `docker compose`
   commands directly — see [Everyday commands](#everyday-commands)).
-- Optional: [`just`](https://github.com/casey/just) if you prefer the `justfile` over the `Makefile`.
 
 Make sure ports **3000** (frontend), **8000** (backend) and **5432** (Postgres, internal) are free.
 
@@ -165,12 +164,7 @@ Django admin (`:8000/admin/`).
 make seed
 ```
 
-This runs `manage.py seed_demo` and loads white-label demo content:
-
-- **4 LaLiga clubs** — Real Madrid, FC Barcelona, Atlético de Madrid, Athletic Club — each with a
-  full squad (11 starters + 6 subs in pitch order, real shirt numbers, club crest).
-- **4 fixtures** — one **live**, one **finished**, two **scheduled** — each with lineups, per-team
-  statistics and an event timeline.
+This runs `manage.py seed_demo` and loads white-label demo content.
 
 The seed is **idempotent**: clubs/players are upserted on natural keys and each match's child rows
 (events, stats, lineup) are rebuilt from scratch, so you can re-run it any time without piling up
@@ -227,19 +221,17 @@ All of these are thin wrappers over `docker compose`. Run `make help` for the li
 | --- | --- |
 | `make up` | Build + start postgres, backend, frontend (foreground; `Ctrl-C` to stop). |
 | `make down` | Stop and remove the containers. |
+| `make prune` | Stop containers **and delete their volumes** (a full DB reset). |
 | `make logs` | Follow container logs. |
 | `make seed` | Load the demo data (run after `make up`). |
 | `make test` | Run the backend test suite (`pytest`). |
+| `make manage ARGS="…"` | Run any `manage.py` command, e.g. `make manage ARGS="showmigrations"`. |
 | `make migrate` | Apply database migrations. |
 | `make makemigrations` | Generate new migrations after model changes. |
 | `make shell` | Open a `bash` shell in the running backend container. |
 | `make build` | Build the images without starting them. |
 
-**`just` equivalents** (if you use `just`): `just up`, `just down`, `just logs`, `just seed`,
-`just migrate`, `just test`, plus two extras — `just manage <args>` to run any `manage.py`
-command, and `just prune` to stop containers **and delete their volumes** (a full DB reset).
-
-**Running anything by hand** (no `make`/`just`):
+**Running anything by hand** (no `make`):
 
 ```bash
 docker compose up --build                                   # start the stack
@@ -306,9 +298,9 @@ The Postgres data lives in a Docker volume, so `make down` keeps your data. To w
 from a clean schema:
 
 ```bash
-docker compose down -v   # stop containers AND delete their volumes (or: just prune)
-make up                   # re-create the DB, re-run migrations, re-create the admin
-make seed                 # reload demo data
+make prune   # stop containers AND delete their volumes
+make up      # re-create the DB, re-run migrations, re-create the admin
+make seed    # reload demo data
 ```
 
 ---
@@ -331,7 +323,7 @@ views per app (`backend/src/<app>/tests/`).
 open-matchroom/
 ├── docker-compose.yml            # local dev: postgres + backend + frontend
 ├── docker-compose.production.yml
-├── Makefile / justfile           # dev entrypoints
+├── Makefile                      # dev entrypoints
 ├── AGENTS.md                     # full contributor & AI-agent guide — read this to extend the project
 ├── backend/                      # Django 6 + DRF (uv, Python 3.14)
 │   ├── compose/ .envs/           # Docker build assets + local/production env files

@@ -242,7 +242,8 @@ button {
 .tl-item::before {
   content: "";
   position: absolute;
-  left: 68px;
+  /* Centred on the 30px node: col1 54px + gap 12px + half node 15px − half line 1px. */
+  left: 80px;
   top: 0;
   bottom: 0;
   width: 2px;

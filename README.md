@@ -1,15 +1,37 @@
-# OpenMatchroom
+<div align="center">
+
+# ⚽ OpenMatchroom
 
 **An open-source, white-label live football match-center.**
 
-A public match center (Hero scoreboard + Lineup / Live timeline / Statistics tabs) and a
-fixtures schedule, plus a gated admin for managing teams, squads, matches, lineups, a live
-console, and statistics.
+Lineups, live commentary and match stats in one screen — with a simple admin to run it all.
+Drop in your colours and crest, self-host it, own the data.
 
-- **Public site** — match center + fixtures schedule.
-- **Admin** — manage teams, squads, fixtures, lineups, a live console, and statistics.
+[**▶️ Live demo**](https://open-matchroom.profil-software.com/demo) &nbsp;·&nbsp; [**🌐 Landing page**](https://open-matchroom.profil-software.com/) &nbsp;·&nbsp; [**📖 Contributor guide**](./AGENTS.md)
 
-It ships as two apps that talk over a REST API.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+&nbsp;![Django 6](https://img.shields.io/badge/Django-6-092E20?logo=django&logoColor=white)
+&nbsp;![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white)
+&nbsp;![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+&nbsp;![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
+
+<a href="https://open-matchroom.profil-software.com/demo">
+  <img src="docs/demo.png" alt="OpenMatchroom — live match center demo" width="840">
+</a>
+
+<sub>The live match center — scoreboard, Lineup / Live timeline / Statistics tabs, updated from the admin live console.</sub>
+
+</div>
+
+---
+
+OpenMatchroom ships as **two apps that talk over a REST API** — a public **match center**
+(scoreboard + Lineup / Live timeline / Statistics tabs) with a fixtures schedule, and a gated
+**admin** for managing teams, squads, fixtures, lineups, a live console, and statistics. The
+**white-label** brand — colours, crest, theme and font — is set per deploy.
+
+> **▶️ Try the [live demo](https://open-matchroom.profil-software.com/demo).** There's also a
+> [landing page](https://open-matchroom.profil-software.com/) that showcases the product.
 
 ---
 
